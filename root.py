@@ -78,9 +78,12 @@ def get_ua(ua_list=[
 def set_background_image(img_url):
     subprocess.call(
         ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", img_url])
+    subprocess.call(
+        ["gsettings", "set", "org.gnome.desktop.background", "picture-options", "scaled"])
 
 
 if __name__ == "__main__":
     song = get_current_song(lastfm_username=LASTFM_USERNAME)
     img_url = get_img_url_by_song(song)
     set_background_image(img_url)
+    print(song[0], "-", song[1], img_url)

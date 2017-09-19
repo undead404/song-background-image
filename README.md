@@ -22,4 +22,4 @@ $ `crontab -e`
 
 I set the script to change my background image every minute:
 
-`* * * * * ~/projects/song-background-image/root.py`
+`* * * * * /usr/bin/python3/ /home/undead404/projects/song-background-image/root.py >> /home/undead404/projects/song-background-image/log.txt`
