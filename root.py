@@ -76,10 +76,36 @@ def get_ua(ua_list=[
 
 
 def set_background_image(img_url):
-    subprocess.call(
-        ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", img_url])
-    subprocess.call(
-        ["gsettings", "set", "org.gnome.desktop.background", "picture-options", "scaled"])
+    shell = subprocess.Popen(
+        ["pgrep", "gnome-session"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    out, err = shell.communicate()
+    # pgrep_gnome_session = subprocess.Popen(
+    #     ["pgrep", "gnome-session"], stdout=subprocess.PIPE)
+    # out, err = pgrep_gnome_session.communicate()
+    pid = int(out)
+    # print(int(out))
+    # subprocess.call(
+    #     ["export", "DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(pid=pid)], shell=True, stdout=subprocess.DEVNULL)
+    shell = subprocess.Popen(
+        "/bin/bash", stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    COMMANDS = [
+        "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(
+            pid=pid),
+        "gsettings set org.gnome.desktop.background picture-uri {img_url}".format(
+            img_url=img_url),
+        "gsettings set org.gnome.desktop.background picture-options scaled"
+    ]
+    # out, err = shell.communicate(
+    #     "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(pid=pid).encode())
+    # # subprocess.call(
+    # #     ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", img_url])
+    # out, err = shell.communicate(
+    #     "gsettings set org.gnome.desktop.background picture-uri {img_url}".format(img_url=img_url).encode())
+    # # subprocess.call(
+    # #     ["gsettings", "set", "org.gnome.desktop.background", "picture-options", "scaled"])
+    # out, err = shell.communicate(
+    #     "gsettings set org.gnome.desktop.background picture-options scaled".encode())
+    shell.communicate("; ".join(COMMANDS).encode())
 
 
 if __name__ == "__main__":
