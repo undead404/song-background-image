@@ -3,6 +3,7 @@ from decouple import config
 import json
 import lxml.cssselect
 import lxml.html
+import os
 import random
 import requests
 import subprocess
@@ -61,6 +62,12 @@ def get_img_urls_from_page(page,
             for meta_elem in META_SELECTOR(page))
 
 
+def get_last_log_record():
+    with open("/home/undead404/projects/song-background-image/log.txt",
+              ) as logfile:
+        return logfile.readlines()[-1]
+
+
 def get_ua(ua_list=[
         'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36',
@@ -109,7 +116,13 @@ def set_background_image(img_url):
 
 
 if __name__ == "__main__":
-    song = get_current_song(lastfm_username=LASTFM_USERNAME)
-    img_url = get_img_url_by_song(song)
-    set_background_image(img_url)
-    print(song[0], "-", song[1], img_url)
+    try:
+        song = get_current_song(lastfm_username=LASTFM_USERNAME)
+        song_string = "{artist_name} - {track_title}".format(
+            artist_name=song[0], track_title=song[1])
+        if song_string not in get_last_log_record():
+            img_url = get_img_url_by_song(song)
+            set_background_image(img_url)
+            print(song[0], "-", song[1], img_url)
+    except requests.exceptions.RequestException:
+        pass
