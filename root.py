@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/undead404/projects/song-background-image/venv/bin/python3
 from decouple import config
 import json
 import lxml.cssselect
