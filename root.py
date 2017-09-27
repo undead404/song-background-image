@@ -1,12 +1,12 @@
 #!/home/undead404/projects/song-background-image/venv/bin/python3
-from decouple import config
 import json
-import lxml.cssselect
-import lxml.html
+from decouple import config
 import os
 import random
-import requests
 import subprocess
+import lxml.cssselect
+import lxml.html
+import requests
 import urllib
 API_KEY = config("API_KEY")
 API_SECRET = config("API_SECRET")
@@ -30,10 +30,12 @@ def fetch_search_page(url):
 
 
 def get_current_song(lastfm_username):
-    response = requests.get("http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={lastfm_username}&api_key={api_key}&format=json".format(
-        api_key=API_KEY, lastfm_username=lastfm_username))
+    response = requests.get(
+        "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={lastfm_username}&api_key={api_key}&format=json".format(
+            api_key=API_KEY, lastfm_username=lastfm_username))
     data = json.loads(response.text)
-    return data["recenttracks"]["track"][0]["artist"]["#text"], data["recenttracks"]["track"][0]["name"]
+    return data["recenttracks"]["track"][0][
+        "artist"]["#text"], data["recenttracks"]["track"][0]["name"]
 
 
 def get_img_url_by_song(song):
@@ -42,6 +44,9 @@ def get_img_url_by_song(song):
     search_url = "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l".format(
         query=encodeURIComponent(search_query))
     search_page = fetch_search_page(search_url)
+    img_url = next(get_img_urls_from_page(search_page))
+    while img_url.startswith("https://i.ytimg.com"):
+        img_url = next(get_img_urls_from_page(search_page))
     return next(get_img_urls_from_page(search_page))
 
 
