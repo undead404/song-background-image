@@ -44,17 +44,24 @@ def get_img_url_by_song(song):
     search_url = "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l".format(
         query=encodeURIComponent(search_query))
     search_page = fetch_search_page(search_url)
-    img_url = next(get_img_urls_from_page(search_page))
+    # print(search_page)
+    img_urls = get_img_urls_from_page(search_page)
+    img_url = next(img_urls)
+    # print(img_url)
     while img_url.startswith("https://i.ytimg.com"):
-        img_url = next(get_img_urls_from_page(search_page))
-    return next(get_img_urls_from_page(search_page))
+        # print("No youtube images!" + img_url)
+        img_url = next(img_urls)
+        # print(img_url)
+    return img_url
 
 
 def get_img_url_from_meta(meta):
     """
     Returns image's url from a certain meta JSON
     """
-    return json.loads(meta)['ou']
+    img_url = json.loads(meta)['ou']
+    # print(img_url)
+    return img_url
 
 
 def get_img_urls_from_page(page,
@@ -63,8 +70,13 @@ def get_img_urls_from_page(page,
     """
     Returns images' urls from a page
     """
-    return (get_img_url_from_meta(meta_elem.text_content())
-            for meta_elem in META_SELECTOR(page))
+    # print(len(META_SELECTOR(page)))
+    for meta_elem in META_SELECTOR(page):
+        meta = meta_elem.text_content()
+        # print(meta)
+        yield get_img_url_from_meta(meta)
+    # return (get_img_url_from_meta(meta_elem.text_content())
+    #         for meta_elem in META_SELECTOR(page))
 
 
 def get_last_log_record():
