@@ -48,7 +48,7 @@ def get_img_url_by_song(song):
     img_urls = get_img_urls_from_page(search_page)
     img_url = next(img_urls)
     # print(img_url)
-    while img_url.startswith("https://i.ytimg.com"):
+    while img_url.startswith("https://i.ytimg.com") or not is_available(img_url):
         # print("No youtube images!" + img_url)
         img_url = next(img_urls)
         # print(img_url)
@@ -80,9 +80,12 @@ def get_img_urls_from_page(page,
 
 
 def get_last_log_record():
-    with open("/home/undead404/projects/song-background-image/log.txt",
-              ) as logfile:
-        return logfile.readlines()[-1]
+    try:
+        with open("/home/undead404/projects/song-background-image/log.txt",
+                  ) as logfile:
+            return logfile.readlines()[-1]
+    except IndexError:
+        return ""
 
 
 def get_ua(ua_list=[
@@ -99,9 +102,19 @@ def get_ua(ua_list=[
     return random.choice(ua_list)
 
 
+def is_available(url):
+    try:
+        return requests.head(url, headers={
+            "User-Agent": get_ua()
+        }).status_code == 200
+    except Exception:
+        return False
+
+
 def set_background_image(img_url):
     shell = subprocess.Popen(
-        ["pgrep", "gnome-session"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        ["pgrep", "gnome-session"], stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
     out, err = shell.communicate()
     # pgrep_gnome_session = subprocess.Popen(
     #     ["pgrep", "gnome-session"], stdout=subprocess.PIPE)
