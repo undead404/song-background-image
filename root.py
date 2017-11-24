@@ -1,4 +1,4 @@
-#!/home/undead404/projects/song-background-image/venv/bin/python3
+#!/env/bin python3
 import json
 from decouple import config
 import os
@@ -11,6 +11,7 @@ import urllib
 API_KEY = config("API_KEY")
 API_SECRET = config("API_SECRET")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
+BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png")
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
@@ -44,14 +45,10 @@ def get_img_url_by_song(song):
     search_url = "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l".format(
         query=encodeURIComponent(search_query))
     search_page = fetch_search_page(search_url)
-    # print(search_page)
     img_urls = get_img_urls_from_page(search_page)
     img_url = next(img_urls)
-    # print(img_url)
-    while img_url.startswith("https://i.ytimg.com") or not is_available(img_url):
-        # print("No youtube images!" + img_url)
+    while is_blacklisted(img_url) or not is_available(img_url):
         img_url = next(img_urls)
-        # print(img_url)
     return img_url
 
 
@@ -60,7 +57,6 @@ def get_img_url_from_meta(meta):
     Returns image's url from a certain meta JSON
     """
     img_url = json.loads(meta)['ou']
-    # print(img_url)
     return img_url
 
 
@@ -70,13 +66,9 @@ def get_img_urls_from_page(page,
     """
     Returns images' urls from a page
     """
-    # print(len(META_SELECTOR(page)))
     for meta_elem in META_SELECTOR(page):
         meta = meta_elem.text_content()
-        # print(meta)
         yield get_img_url_from_meta(meta)
-    # return (get_img_url_from_meta(meta_elem.text_content())
-    #         for meta_elem in META_SELECTOR(page))
 
 
 def get_last_log_record():
@@ -111,37 +103,28 @@ def is_available(url):
         return False
 
 
+def is_blacklisted(url):
+    for blacklisted_domain in BLACKLISTED_DOMAINS:
+        if blacklisted_domain in url:
+            return True
+    return False
+
+
 def set_background_image(img_url):
     shell = subprocess.Popen(
         ["pgrep", "gnome-session"], stdin=subprocess.PIPE,
         stdout=subprocess.PIPE)
     out, err = shell.communicate()
-    # pgrep_gnome_session = subprocess.Popen(
-    #     ["pgrep", "gnome-session"], stdout=subprocess.PIPE)
-    # out, err = pgrep_gnome_session.communicate()
     pid = int(out)
-    # print(int(out))
-    # subprocess.call(
-    #     ["export", "DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(pid=pid)], shell=True, stdout=subprocess.DEVNULL)
     shell = subprocess.Popen(
         "/bin/bash", stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     COMMANDS = [
         "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(
             pid=pid),
-        "gsettings set org.gnome.desktop.background picture-uri {img_url}".format(
+        "gsettings set org.gnome.desktop.background picture-uri '{img_url}'".format(
             img_url=img_url),
         "gsettings set org.gnome.desktop.background picture-options scaled"
     ]
-    # out, err = shell.communicate(
-    #     "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(pid=pid).encode())
-    # # subprocess.call(
-    # #     ["gsettings", "set", "org.gnome.desktop.background", "picture-uri", img_url])
-    # out, err = shell.communicate(
-    #     "gsettings set org.gnome.desktop.background picture-uri {img_url}".format(img_url=img_url).encode())
-    # # subprocess.call(
-    # #     ["gsettings", "set", "org.gnome.desktop.background", "picture-options", "scaled"])
-    # out, err = shell.communicate(
-    #     "gsettings set org.gnome.desktop.background picture-options scaled".encode())
     shell.communicate("; ".join(COMMANDS).encode())
 
 
