@@ -11,7 +11,8 @@ import urllib
 API_KEY = config("API_KEY")
 API_SECRET = config("API_SECRET")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
-BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png")
+BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png", "akkordus.ru",
+                       "mesthit.ru", "vk.com", "vkontakte.ru", "userapi.com", "songaah.com", "coub.com")
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
@@ -25,9 +26,10 @@ def fetch_search_page(url):
     """
     Fetches Google ajax page by url
     """
-    return lxml.html.fromstring(json.loads(requests.get(url,
-                                                        headers={'User-Agent': get_ua()}).content.decode('utf-8'
-                                                                                                         ))[1][1])
+    return lxml.html.fromstring(json.loads(
+        requests.get(url,
+                     headers={'User-Agent': get_ua()}).content.decode(
+                         'utf-8'))[1][1])
 
 
 def get_current_song(lastfm_username):
