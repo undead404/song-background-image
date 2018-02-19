@@ -13,7 +13,7 @@ API_SECRET = config("API_SECRET")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
 BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png", "akkordus.ru",
                        "mesthit.ru", "vk.com", "vkontakte.ru", "userapi.com", "songaah.com", "coub.com",
-                       "tekstovoi.ru")
+                       "tekstovoi.ru", "lookaside.fbsbx.com")
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
