@@ -11,9 +11,11 @@ import urllib
 API_KEY = config("API_KEY")
 API_SECRET = config("API_SECRET")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
-BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png", "akkordus.ru",
-                       "mesthit.ru", "vk.com", "vkontakte.ru", "userapi.com", "songaah.com", "coub.com",
-                       "tekstovoi.ru", "lookaside.fbsbx.com")
+BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png",
+                       "akkordus.ru", "mesthit.ru", "vk.com", "vkontakte.ru",
+                       "userapi.com", "songaah.com", "coub", "tekstovoi.ru",
+                       "lookaside.fbsbx.com", "tabstube.com", "vbox7.com",
+                       "textscan.ru", "alltexts.ru")
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
@@ -35,7 +37,8 @@ def fetch_search_page(url):
 
 def get_current_song(lastfm_username):
     response = requests.get(
-        "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={lastfm_username}&api_key={api_key}&format=json".format(
+        "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks"
+        "&user={lastfm_username}&api_key={api_key}&format=json".format(
             api_key=API_KEY, lastfm_username=lastfm_username))
     data = json.loads(response.text)
     return data["recenttracks"]["track"][0][
@@ -45,7 +48,9 @@ def get_current_song(lastfm_username):
 def get_img_url_by_song(song):
     search_query = "\"{artist_name}\" \"{track_title}\"".format(
         artist_name=song[0], track_title=song[1])
-    search_url = "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l".format(
+    search_url = (
+        "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs"
+        "&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l").format(
         query=encodeURIComponent(search_query))
     search_page = fetch_search_page(search_url)
     img_urls = get_img_urls_from_page(search_page)
@@ -83,13 +88,19 @@ def get_last_log_record():
         return ""
 
 
-def get_ua(ua_list=[
-        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14',
-        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:29.0) Gecko/20100101 Firefox/29.0',
-        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.137 Safari/537.36',
-        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0',
+def get_ua(ua_list=[(
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, '
+        'like Gecko) Chrome/34.0.1847.131 Safari/537.36'), (
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 '
+        '(KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'), (
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14'
+        ' (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14'), (
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:29.0) Gecko/20100101 '
+        'Firefox/29.0'), (
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, '
+        'like Gecko) Chrome/34.0.1847.137 Safari/537.36'), (
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 '
+        'Firefox/28.0')
 ]):
     """
     Provides pseudo-random User-Agent from a saved list of ones
@@ -122,9 +133,11 @@ def set_background_image(img_url):
     shell = subprocess.Popen(
         "/bin/bash", stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     COMMANDS = [
-        "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/{pid}/environ|cut -d= -f2-)".format(
+        "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS "
+        "/proc/{pid}/environ|cut -d= -f2-)".format(
             pid=pid),
-        "gsettings set org.gnome.desktop.background picture-uri '{img_url}'".format(
+        "gsettings set org.gnome.desktop.background picture-uri "
+        "'{img_url}'".format(
             img_url=img_url),
         "gsettings set org.gnome.desktop.background picture-options scaled"
     ]
