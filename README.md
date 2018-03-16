@@ -9,7 +9,7 @@ Changes desktop background image according to the last song scrobbled by a last.
 
 ### 1. Create in the script's folder an `.env` file with content as followed:
 `API_KEY={your api key}` (request it [here](https://www.last.fm/api/account/create))
-`API_SECRET={your api secret}` (request it [here](https://www.last.fm/api/account/create))
+`API_SECRET={your api secret}` (corresponding to your API_KEY)
 `LASTFM_USERNAME={your last.fm username}`
 
 ### 2. Install requirements

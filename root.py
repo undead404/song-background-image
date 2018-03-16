@@ -15,7 +15,8 @@ BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png",
                        "akkordus.ru", "mesthit.ru", "vk.com", "vkontakte.ru",
                        "userapi.com", "songaah.com", "coub", "tekstovoi.ru",
                        "lookaside.fbsbx.com", "tabstube.com", "vbox7.com",
-                       "textscan.ru", "alltexts.ru")
+                       "textscan.ru", "alltexts.ru", "vimeocdn.com",
+                       "cleepr.ru", "youtube.com")
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
