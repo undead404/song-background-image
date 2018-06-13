@@ -46,29 +46,44 @@ def get_current_song(lastfm_username):
 
 
 def get_img_url_by_song(song):
-    query_by_song = "\"{artist_name}\" \"{track_title}\"".format(
-        artist_name=song[0], track_title=song[1])
-    search_url = (
-        "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
-        query=encodeURIComponent(query_by_song))
-    search_page = fetch_search_page(search_url)
-    img_urls = get_img_urls_from_page(search_page)
-    img_url = next(img_urls)
     try:
-        while is_blacklisted(img_url) or not is_available(img_url):
-            img_url = next(img_urls)
-        return img_url
-    except StopIteration:
-        query_by_album = "\"{artist_name}\" \"{album_title}\"".format(
-            artist_name=song[0], album_title=song[2])
+        query_by_song = "\"{artist_name}\" \"{track_title}\"".format(
+            artist_name=song[0], track_title=song[1])
         search_url = (
             "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
-            query=encodeURIComponent(query_by_album))
+            query=encodeURIComponent(query_by_song))
+        search_page = fetch_search_page(search_url)
         img_urls = get_img_urls_from_page(search_page)
         img_url = next(img_urls)
         while is_blacklisted(img_url) or not is_available(img_url):
             img_url = next(img_urls)
         return img_url
+    except StopIteration:
+        try:
+            query_by_album = "\"{artist_name}\" \"{album_title}\"".format(
+                artist_name=song[0], album_title=song[2])
+            search_url = (
+                "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+                query=encodeURIComponent(query_by_album))
+            img_urls = get_img_urls_from_page(search_page)
+            img_url = next(img_urls)
+            while is_blacklisted(img_url) or not is_available(img_url):
+                img_url = next(img_urls)
+            return img_url
+        except StopIteration:
+            try:
+                query_by_artist = "\"{artist_name}\"".format(
+                    artist_name=song[0])
+                search_url = (
+                    "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+                    query=encodeURIComponent(query_by_artist))
+                img_urls = get_img_urls_from_page(search_page)
+                img_url = next(img_urls)
+                while is_blacklisted(img_url) or not is_available(img_url):
+                    img_url = next(img_urls)
+                return img_url
+            except StopIteration:
+                return None
 
 
 def get_img_url_from_meta(meta):
@@ -162,7 +177,8 @@ if __name__ == "__main__":
             artist_name=song[0], track_title=song[1])
         if song_string not in get_last_log_record():
             img_url = get_img_url_by_song(song)
-            set_background_image(img_url)
-            print(song[0], "-", song[1], img_url)
+            if img_url is not None:
+                set_background_image(img_url)
+                print(song[0], "-", song[1], img_url)
     except requests.exceptions.RequestException as error:
         print('error', error)
