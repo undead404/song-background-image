@@ -1,6 +1,7 @@
 #!/env/bin python3
 import json
 from decouple import config
+import html
 import os
 import random
 import subprocess
@@ -28,12 +29,10 @@ def encodeURIComponent(input_str, quotate=urllib.parse.quote):
 
 def fetch_search_page(url):
     """
-    Fetches Google ajax page by url
+    Fetches Bing page by url
     """
-    return lxml.html.fromstring(json.loads(
-        requests.get(url,
-                     headers={'User-Agent': get_ua()}).content.decode(
-                         'utf-8'))[1][1])
+    return lxml.html.fromstring(requests.get(url, headers={
+        'User-Agent': get_ua()}).content)
 
 
 def get_current_song(lastfm_username):
@@ -43,40 +42,51 @@ def get_current_song(lastfm_username):
             api_key=API_KEY, lastfm_username=lastfm_username))
     data = json.loads(response.text)
     return data["recenttracks"]["track"][0][
-        "artist"]["#text"], data["recenttracks"]["track"][0]["name"]
+        "artist"]["#text"], data["recenttracks"]["track"][0]["name"], data["recenttracks"]["track"][0]["album"]['#text']
 
 
 def get_img_url_by_song(song):
-    search_query = "\"{artist_name}\" \"{track_title}\"".format(
+    query_by_song = "\"{artist_name}\" \"{track_title}\"".format(
         artist_name=song[0], track_title=song[1])
     search_url = (
-        "https://www.google.com.ua/search?async=_id:rg_s,_pms:qs"
-        "&q={query}&start=0&asearch=ichunk&tbm=isch&tbs=isz:l").format(
-        query=encodeURIComponent(search_query))
+        "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+        query=encodeURIComponent(query_by_song))
     search_page = fetch_search_page(search_url)
     img_urls = get_img_urls_from_page(search_page)
     img_url = next(img_urls)
-    while is_blacklisted(img_url) or not is_available(img_url):
+    try:
+        while is_blacklisted(img_url) or not is_available(img_url):
+            img_url = next(img_urls)
+        return img_url
+    except StopIteration:
+        query_by_album = "\"{artist_name}\" \"{album_title}\"".format(
+            artist_name=song[0], album_title=song[2])
+        search_url = (
+            "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+            query=encodeURIComponent(query_by_album))
+        img_urls = get_img_urls_from_page(search_page)
         img_url = next(img_urls)
-    return img_url
+        while is_blacklisted(img_url) or not is_available(img_url):
+            img_url = next(img_urls)
+        return img_url
 
 
 def get_img_url_from_meta(meta):
     """
     Returns image's url from a certain meta JSON
     """
-    img_url = json.loads(meta)['ou']
+    img_url = json.loads(html.unescape(meta))['murl']
     return img_url
 
 
 def get_img_urls_from_page(page,
-                           META_SELECTOR=lxml.cssselect.CSSSelector('.rg_meta'
+                           META_SELECTOR=lxml.cssselect.CSSSelector('.iusc'
                                                                     )):
     """
     Returns images' urls from a page
     """
     for meta_elem in META_SELECTOR(page):
-        meta = meta_elem.text_content()
+        meta = meta_elem.attrib['m']
         yield get_img_url_from_meta(meta)
 
 
@@ -154,5 +164,5 @@ if __name__ == "__main__":
             img_url = get_img_url_by_song(song)
             set_background_image(img_url)
             print(song[0], "-", song[1], img_url)
-    except requests.exceptions.RequestException:
-        pass
+    except requests.exceptions.RequestException as error:
+        print('error', error)
