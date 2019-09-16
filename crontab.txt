@@ -1,0 +1,3 @@
+* * * * * /home/undead404/projects/song-background-image/src/main
+
+0 12 * * * cd /home/undead404/projects/song-background-image/ || exit 1; /usr/bin/python3 ./fix-tags.py /home/undead404/Music
