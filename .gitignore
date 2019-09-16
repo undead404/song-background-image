@@ -7,5 +7,6 @@ pkg/
 .sonarlint/
 logs/
 __pycache__/
-src/last-song.txt
-src/main
+last-song.txt
+loved.json
+song-background-image

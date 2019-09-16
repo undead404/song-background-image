@@ -285,15 +285,24 @@ func setBackgroundImg(imgURL, ext string) error {
 	var stderr bytes.Buffer
 	commandText := strings.Join(
 		[]string{
-			"export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep mate-session)/environ|cut -d= -f2-)",
-			fmt.Sprintf("wget --ignore-length -O /home/undead404/wallpaper.temp \"%s\"", imgURL),
-			fmt.Sprintf("cp /home/undead404/wallpaper.temp /home/undead404/wallpaper.%s", ext),
-			fmt.Sprintf("gsettings set org.mate.background picture-filename \"'/home/undead404/wallpaper.%s'\"", ext),
-			// fmt.Sprintf("gsettings set org.gnome.desktop.background picture-uri \"%s\"", imgURL),
-			// "gsettings set org.gnome.desktop.background picture-options scaled",
+			"export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep gnome-session)/environ|cut -d= -f2-)",
+			fmt.Sprintf("gsettings set org.gnome.desktop.background picture-uri \"%s\"", imgURL),
+			"gsettings set org.gnome.desktop.background picture-options scaled",
 		},
 		" && ",
 	)
+	if os.Getenv("DESKTOP_SESSION") == "mate" {
+		fmt.Println("MATE")
+		commandText = strings.Join(
+			[]string{
+				"export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep mate-session)/environ|cut -d= -f2-)",
+				fmt.Sprintf("wget --ignore-length -O /home/undead404/wallpaper.temp \"%s\"", imgURL),
+				fmt.Sprintf("cp /home/undead404/wallpaper.temp /home/undead404/wallpaper.%s", ext),
+				fmt.Sprintf("gsettings set org.mate.background picture-filename \"'/home/undead404/wallpaper.%s'\"", ext),
+			},
+			" && ",
+		)
+	}
 	// log.Println(commandText)
 	command := exec.Command("sh", "-c", commandText)
 	command.Stderr = &stderr
