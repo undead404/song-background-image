@@ -12,12 +12,7 @@ import urllib
 API_KEY = config("API_KEY")
 API_SECRET = config("API_SECRET")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
-BLACKLISTED_DOMAINS = ("i.ytimg.com", "rostext.ru", "s2.dmcdn.net", "scr.png",
-                       "akkordus.ru", "mesthit.ru", "vk.com", "vkontakte.ru",
-                       "userapi.com", "songaah.com", "coub", "tekstovoi.ru",
-                       "lookaside.fbsbx.com", "tabstube.com", "vbox7.com",
-                       "textscan.ru", "alltexts.ru", "vimeocdn.com",
-                       "cleepr.ru", "youtube.com")
+BLACKLISTED_DOMAINS = []
 
 
 def encodeURIComponent(input_str, quotate=urllib.parse.quote):
@@ -42,15 +37,16 @@ def get_current_song(lastfm_username):
             api_key=API_KEY, lastfm_username=lastfm_username))
     data = json.loads(response.text)
     return data["recenttracks"]["track"][0][
-        "artist"]["#text"], data["recenttracks"]["track"][0]["name"], data["recenttracks"]["track"][0]["album"]['#text']
+        "artist"]["#text"], data["recenttracks"]["track"][0]["name"], data[
+            "recenttracks"]["track"][0]["album"]['#text']
 
 
 def get_img_url_by_song(song):
     try:
-        query_by_song = "\"{artist_name}\" \"{track_title}\"".format(
+        query_by_song = "{artist_name} {track_title}".format(
             artist_name=song[0], track_title=song[1])
         search_url = (
-            "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+            "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1080_1080&form=IRFLTR&first=1").format(
             query=encodeURIComponent(query_by_song))
         search_page = fetch_search_page(search_url)
         img_urls = get_img_urls_from_page(search_page)
@@ -60,11 +56,12 @@ def get_img_url_by_song(song):
         return img_url
     except StopIteration:
         try:
-            query_by_album = "\"{artist_name}\" \"{album_title}\"".format(
+            query_by_album = "{artist_name} {album_title}".format(
                 artist_name=song[0], album_title=song[2])
             search_url = (
-                "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+                "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1080_1080&form=IRFLTR&first=1").format(
                 query=encodeURIComponent(query_by_album))
+            # print(search_url)
             img_urls = get_img_urls_from_page(search_page)
             img_url = next(img_urls)
             while is_blacklisted(img_url) or not is_available(img_url):
@@ -72,11 +69,12 @@ def get_img_url_by_song(song):
             return img_url
         except StopIteration:
             try:
-                query_by_artist = "\"{artist_name}\"".format(
+                query_by_artist = "{artist_name}".format(
                     artist_name=song[0])
                 search_url = (
-                    "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1920_1080&form=IRFLTR&first=1").format(
+                    "https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-custom_1080_1080&form=IRFLTR&first=1").format(
                     query=encodeURIComponent(query_by_artist))
+                # print(search_url)
                 img_urls = get_img_urls_from_page(search_page)
                 img_url = next(img_urls)
                 while is_blacklisted(img_url) or not is_available(img_url):

@@ -2,3 +2,10 @@
 .env
 log.txt
 venv/
+bin/
+pkg/
+.sonarlint/
+logs/
+__pycache__/
+src/last-song.txt
+src/main
