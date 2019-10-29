@@ -102,10 +102,10 @@ def get(url):
 
 
 def get_audio_files(directory):
-    glob_pattern = "{directory}/**/*.m4a".format(directory=directory)
+    glob_pattern = "{directory}/**/*.m4a".format(directory=directory.replace('[', '[[]'))
     for file_path in glob.iglob(glob_pattern, recursive=True):
         yield file_path
-    glob_pattern = "{directory}/**/*.mp3".format(directory=directory)
+    glob_pattern = "{directory}/**/*.mp3".format(directory=directory.replace('[', '[[]'))
     for file_path in glob.iglob(glob_pattern, recursive=True):
         yield file_path
 
