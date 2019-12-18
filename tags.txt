@@ -554,7 +554,6 @@ sitar
 ska
 ska punk
 skate punk
-skinhead
 slamming brutal death metal
 slowcore
 sludge metal
@@ -577,7 +576,6 @@ spoken word
 stonegaze
 stoner metal
 stoner rock
-straight edge
 street punk
 sublime frequencies
 sufi

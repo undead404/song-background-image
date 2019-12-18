@@ -23,22 +23,20 @@ import (
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
-type valueWithMbid struct {
-	Text string `json:"#text"`
+type nameWithMbid struct {
+	Name string `json:"name"`
 }
 
-type recentTracksData struct {
-	RecentTracks struct {
+type lovedTracksData struct {
+	LovedTracks struct {
 		Track []struct {
-			Album  valueWithMbid `json:"album"`
-			Artist valueWithMbid `json:"artist"`
-			Name   string
+			Artist nameWithMbid `json:"artist"`
+			Name   string       `json:"name"`
 		} `json:"track"`
-	} `json:"recenttracks"`
+	} `json:"lovedtracks"`
 }
 
 type songData struct {
-	Album  string
 	Artist string
 	Name   string
 }
@@ -53,13 +51,14 @@ var lastfmUsername string
 var localRand *rand.Rand
 
 var mime = map[string]string{
-	"image/jpeg": "jpg",
-	"image/png": "png",
+	"image/jpeg":    "jpg",
+	"image/png":     "png",
 	"image/svg+xml": "svg",
-	"image/xcf": "xcf",
-};
+	"image/xcf":     "xcf",
+}
 
 func fetchSearchPage(searchURL string) (*goquery.Document, error) {
+	fmt.Printf("fetchSearchPage(%s)\n", searchURL)
 	request := req.New()
 	response, err := request.Get(searchURL, getHeaders())
 	if err != nil {
@@ -74,10 +73,11 @@ func fetchSearchPage(searchURL string) (*goquery.Document, error) {
 }
 
 func getCurrentSong(lastfmUsername string) (*songData, error) {
+	fmt.Printf("getCurrentSong(%s)\n", lastfmUsername)
 	request := req.New()
 	response, err := request.Get(
 		fmt.Sprintf(
-			"http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=%s&api_key=%s&format=json",
+			"http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user=%s&api_key=%s&format=json",
 			lastfmUsername,
 			apiKey,
 		),
@@ -85,20 +85,20 @@ func getCurrentSong(lastfmUsername string) (*songData, error) {
 	if err != nil {
 		return nil, err
 	}
-	rtd := recentTracksData{}
+	rtd := lovedTracksData{}
 	err = response.ToJSON(&rtd)
 	if err != nil {
 		log.Panic(err)
 	}
-	track := rtd.RecentTracks.Track[0]
+	track := rtd.LovedTracks.Track[0]
 	return &songData{
-		Album:  track.Album.Text,
-		Artist: track.Artist.Text,
+		Artist: track.Artist.Name,
 		Name:   track.Name,
 	}, nil
 }
 
 func getHeaders() http.Header {
+	fmt.Println("getHeaders()")
 	choice := localRand.Intn(len(availableHeaders))
 	headers := make(http.Header)
 	headers.Set(
@@ -109,19 +109,9 @@ func getHeaders() http.Header {
 }
 
 func getImgURLBySong(song *songData) (string, string, error) {
+	fmt.Printf("getImgURLBySong(%v)\n", song)
 	queryBySong := fmt.Sprintf("%s - %s", song.Artist, song.Name)
 	imgUrls, err := getImgURLsByQuery(queryBySong)
-	if err != nil {
-		return "", "", err
-	}
-	for _, imgURL := range imgUrls {
-		ext := getExt(imgURL)
-		if ext != "" {
-			return imgURL, ext, nil
-		}
-	}
-	queryByAlbum := fmt.Sprintf("%s - %s", song.Artist, song.Album)
-	imgUrls, err = getImgURLsByQuery(queryByAlbum)
 	if err != nil {
 		return "", "", err
 	}
@@ -146,6 +136,7 @@ func getImgURLBySong(song *songData) (string, string, error) {
 }
 
 func getImgURLFromMeta(meta string) (string, error) {
+	fmt.Printf("getImgURLFromMeta(%s)\n", meta)
 	metaUnescaped := html.UnescapeString(meta)
 	var imgData bingImgMeta
 	err := json.Unmarshal([]byte(metaUnescaped), &imgData)
@@ -156,6 +147,7 @@ func getImgURLFromMeta(meta string) (string, error) {
 }
 
 func getImgURLsFromSearchPage(searchPage *goquery.Document) ([]string, error) {
+	fmt.Printf("getImgURLsFromSearchPage(%v)\n", searchPage)
 	elems := searchPage.Find(".iusc").Nodes
 	var imgURLs []string
 	var meta string
@@ -180,6 +172,7 @@ func getImgURLsFromSearchPage(searchPage *goquery.Document) ([]string, error) {
 }
 
 func getImgURLsByQuery(query string) ([]string, error) {
+	fmt.Printf("getImgURLsByQuery(%s)\n", query)
 	searchURL := fmt.Sprintf(
 		"https://www.bing.com/images/search?q=%s&qft=+filterui:imagesize-custom_1080_720&form=IRFLTR&first=1",
 		url.PathEscape(query),
@@ -196,15 +189,17 @@ func getImgURLsByQuery(query string) ([]string, error) {
 }
 
 func getLastSong(dir string) string {
+	fmt.Printf("getLastSong(%s)\n", dir)
 	lastSong, err := ioutil.ReadFile(fmt.Sprintf("%s/last-song.txt", dir))
 	if err != nil {
-		log.Printf("getLastSong: %s", err.Error())
+		log.Printf("getLastSong: %s\n", err.Error())
 		return ""
 	}
 	return string(lastSong)
 }
 
 func getExt(imgURL string) string {
+	fmt.Printf("getExt(%s)\n", imgURL)
 	request := req.New()
 	response, err := request.Head(imgURL, getHeaders())
 	if err != nil {
@@ -265,14 +260,15 @@ func main() {
 			if err != nil {
 				log.Panic(err)
 			}
-			log.Printf("%s - %s %s", song.Artist, song.Name, imgURL)
+			log.Printf("%s - %s %s\n", song.Artist, song.Name, imgURL)
 		} else {
-			log.Printf("%s - %s: no images found", song.Artist, song.Name)
+			log.Printf("%s - %s: no images found\n", song.Artist, song.Name)
 		}
 	}
 }
 
 func saveLastSong(dir, songString string) error {
+	fmt.Printf("saveLastSong(%s, %s)\n", dir, songString)
 	err := ioutil.WriteFile(fmt.Sprintf("%s/last-song.txt", dir), []byte(songString), 0644)
 	if err != nil {
 		return fmt.Errorf("saveLastSong: %s", err.Error())
@@ -281,13 +277,15 @@ func saveLastSong(dir, songString string) error {
 }
 
 func setBackgroundImg(imgURL, ext string) error {
+	fmt.Printf("setBackgroundImg(%s, %s)\n", imgURL, ext)
 	var err error
 	var stderr bytes.Buffer
+	fmt.Println(imgURL)
 	commandText := strings.Join(
 		[]string{
-			"export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep gnome-session)/environ|cut -d= -f2-)",
-			fmt.Sprintf("gsettings set org.gnome.desktop.background picture-uri \"%s\"", imgURL),
-			"gsettings set org.gnome.desktop.background picture-options scaled",
+			// "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep gnome-session)/environ|cut -d= -f2-)",
+			fmt.Sprintf("/usr/bin/gsettings set org.gnome.desktop.background picture-uri \"%s\"", imgURL),
+			"/usr/bin/gsettings set org.gnome.desktop.background picture-options scaled",
 		},
 		" && ",
 	)
@@ -295,15 +293,15 @@ func setBackgroundImg(imgURL, ext string) error {
 		fmt.Println("MATE")
 		commandText = strings.Join(
 			[]string{
-				"export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep mate-session)/environ|cut -d= -f2-)",
+				// "export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$(pgrep mate-session)/environ|cut -d= -f2-)",
 				fmt.Sprintf("wget --ignore-length -O /home/undead404/wallpaper.temp \"%s\"", imgURL),
 				fmt.Sprintf("cp /home/undead404/wallpaper.temp /home/undead404/wallpaper.%s", ext),
-				fmt.Sprintf("gsettings set org.mate.background picture-filename \"'/home/undead404/wallpaper.%s'\"", ext),
+				fmt.Sprintf("/usr/bin/gsettings set org.mate.background picture-filename \"'/home/undead404/wallpaper.%s'\"", ext),
 			},
 			" && ",
 		)
 	}
-	// log.Println(commandText)
+	fmt.Println(commandText)
 	command := exec.Command("sh", "-c", commandText)
 	command.Stderr = &stderr
 	err = command.Run()
