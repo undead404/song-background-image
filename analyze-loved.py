@@ -1,7 +1,7 @@
 from datetime import datetime
 import functools
 import json
-import multiprocessing
+from multiprocessing.dummy import Pool
 from pprint import pprint
 import re
 import urllib
@@ -20,6 +20,8 @@ ARTIST_TOPTAGS = (
     "http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&"
     "api_key={api_key}&artist={artist}&format=json"
 )
+
+tags_by_artists = {}
 
 API_KEY = config("API_KEY")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
@@ -148,7 +150,22 @@ def get_track_taste_portion(artist, track, track_uts):
             tags = {TAGS[normalize_tag(tag["name"])]: tag["count"]
                     for tag in artist_tags_list}
     tags_sum = sum(tags.values())
-    return {tag: tags[tag] / (tags_sum*(LAUNCH_TIME - track_uts)) for tag in tags}
+    taste_portion = {
+        tag: tags[tag] / (tags_sum*(LAUNCH_TIME - track_uts)) for tag in tags}
+    record_tags_artist(artist, taste_portion)
+    return taste_portion
+
+
+def record_tags_artist(artist, taste_portion):
+    global tags_by_artists
+    for tag in taste_portion:
+        if tag not in tags_by_artists:
+            tags_by_artists[tag] = {}
+        if artist in tags_by_artists[tag]:
+            tags_by_artists[tag][artist] += taste_portion[tag]
+        else:
+            tags_by_artists[tag][artist] = taste_portion[tag]
+    # print('tag', tags_by_artists)
 
 
 def request_data(url, top_field, retries_num=0):
@@ -191,7 +208,7 @@ page_num = 1
 # pages_num = 2
 
 
-taste_portions = multiprocessing.Pool().map(
+taste_portions = Pool().map(
     get_page_taste_portion,
     range(1, pages_num + 1),
 )
@@ -209,7 +226,17 @@ taste_pairs = sorted(
     key=lambda taste_pair: taste_pair[1],
     reverse=True,
 )
-pprint(taste_pairs[:10])
+
+
+def get_top_by_tag(tag):
+    global tags_by_artists
+    return list(map(lambda item: item[0], sorted(tags_by_artists.get(tag, {}).items(),
+                                                 key=lambda taste_pair: taste_pair[1],
+                                                 reverse=True,)))[:10]
+top = taste_pairs[:10]
+for tag_pair in top:
+    print(tag_pair)
+    pprint(get_top_by_tag(tag_pair[0]))
 
 
 def hashtagize(taste_pair):
