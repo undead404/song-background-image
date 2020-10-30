@@ -1,0 +1,42 @@
+{
+  "author": "brute18@gmail.com",
+  "dependencies": {
+    "@babel/core": "~7.10.4",
+    "@babel/node": "~7.10.4",
+    "@babel/plugin-proposal-class-properties": "~7.10.4",
+    "@babel/plugin-transform-runtime": "~7.10.4",
+    "@babel/preset-env": "~7.10.4",
+    "axios": "0.19.2",
+    "chalk": "^4.1.0",
+    "lodash": "~4.17.15",
+    "mustache": "~4.0.1"
+  },
+  "devDependencies": {
+    "babel-plugin-dotenv-import": "~2.1.0",
+    "eslint": "~7.4.0",
+    "eslint-config-airbnb-base": "~14.2.0",
+    "eslint-config-prettier": "~6.11.0",
+    "eslint-plugin-array-func": "~3.1.6",
+    "eslint-plugin-eslint-comments": "~3.2.0",
+    "eslint-plugin-import": "~2.22.0",
+    "eslint-plugin-jest": "^23.18.0",
+    "eslint-plugin-lodash": "~7.1.0",
+    "eslint-plugin-node": "~11.1.0",
+    "eslint-plugin-prettier": "~3.1.4",
+    "eslint-plugin-promise": "~4.2.1",
+    "eslint-plugin-unicorn": "~20.1.0",
+    "jest": "^26.1.0",
+    "prettier": "~2.0.5"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "name": "song-background-image",
+  "private": true,
+  "scripts": {
+    "fix": "yarn lint --fix",
+    "lint": "eslint .",
+    "start": "babel-node src/analyze-loved-tags.js",
+    "test": "jest"
+  },
+  "version": "0.1.0"
+}

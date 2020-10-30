@@ -1,0 +1,36 @@
+{
+    "ignore": [
+        "build/**/*.test.js"
+    ],
+    "plugins": [
+        [
+            "@babel/transform-runtime"
+        ],
+        "@babel/plugin-proposal-class-properties",
+        [
+            "dotenv-import",
+            {
+                "moduleName": "@env",
+                "path": ".env",
+                "blacklist": null,
+                "whitelist": null,
+                "safe": false,
+                "allowUndefined": false
+            }
+        ]
+    ],
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "corejs": {
+                    "version": 3
+                },
+                "targets": {
+                    "node": "12"
+                },
+                "useBuiltIns": "usage"
+            }
+        ]
+    ]
+}

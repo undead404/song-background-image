@@ -1,0 +1,7 @@
+{
+  "ALBUM_TOP_TAGS": "http://ws.audioscrobbler.com/2.0/?method=album.gettoptags&api_key={{{api_key}}}&artist={{{artist}}}&album={{{album}}}&format=json",
+  "ARTIST_TOP_TAGS": "http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&api_key={{{api_key}}}&artist={{{artist}}}&format=json",
+  "TRACK_GET_INFO": "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key={{{api_key}}}&artist={{{artist}}}&track={{{track}}}&format=json",
+  "TRACK_TOP_TAGS": "http://ws.audioscrobbler.com/2.0/?method=track.getTopTags&api_key={{{api_key}}}&artist={{{artist}}}&track={{{track}}}&format=json",
+  "USER_GET_LOVED_TRACKS": "http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user={{{user}}}&api_key={{{api_key}}}&format=json&page={{{page_num}}}"
+}

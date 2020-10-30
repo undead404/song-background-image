@@ -21,7 +21,6 @@ ARTIST_TOPTAGS = (
     "api_key={api_key}&artist={artist}&format=json"
 )
 
-tags_by_artists = {}
 
 API_KEY = config("API_KEY")
 LASTFM_USERNAME = config("LASTFM_USERNAME")
@@ -32,25 +31,6 @@ TRACKS_PER_PAGE = 50
 LAUNCH_TIME = int(datetime.now().timestamp())
 
 total = None
-TAG_PATTERN = re.compile('[^a-zA-Z0-9]+')
-
-
-ARTISTS_TAGS = {}
-with open('artists.json') as artists_file:
-    ARTISTS_TAGS = json.load(artists_file)["data"]
-SONGS_TAGS = {}
-with open('songs.json') as songs_file:
-    SONGS_TAGS = json.load(songs_file)["data"]
-
-
-def normalize_tag(tag):
-    return TAG_PATTERN.sub(' ', tag.lower()).strip()
-
-
-TAGS = None
-
-with open('tags.json') as tags_file:
-    TAGS = json.load(tags_file)
 
 
 def extend_taste(taste, taste_portion, multiply_by=1):
@@ -91,81 +71,9 @@ def get_page_taste_portion(page_num):
 
 
 def get_track_taste_portion(artist, track, track_uts):
-    tags = None
-    album = None
-    if artist in SONGS_TAGS and track in SONGS_TAGS[artist]:
-        tags = SONGS_TAGS[artist][track]
-    else:
-        print(
-            "get_track_taste_portion('{artist}', '{track}', ..)".format(
-                artist=artist,
-                track=track,
-            ),
-        )
-        track_data = request_data(
-            TRACK_GET_INFO.format(
-                api_key=API_KEY,
-                artist=urllib.parse.quote(artist),
-                track=urllib.parse.quote(track),
-            ), "track"
-        )
-        if track_data is None:
-            return {}
-        if "album" in track_data and track_data["album"] is not None and "name" in track_data["album"]:
-            album = track_data["album"]["name"]
-        track_toptags_data = request_data(
-            TRACK_TOP_TAGS.format(
-                api_key=API_KEY,
-                artist=urllib.parse.quote(artist),
-                track=urllib.parse.quote(track),
-            ), "toptags"
-        )
-        if track_toptags_data is not None and "tag" in track_toptags_data:
-            tags = {TAGS[normalize_tag(tag["name"])]: tag["count"]
-                    for tag in track_toptags_data["tag"] if normalize_tag(tag["name"]) in TAGS}
-    if tags is None or len(tags) == 0:
-        if album is not None:
-            print(
-                "get_album_taste_portion('{artist}', '{album}', ..)".format(
-                    album=album, artist=artist,
-                ),
-            )
-            album_data = request_data(ALBUM_TOPTAGS.format(
-                album=urllib.parse.quote(album), api_key=API_KEY, artist=urllib.parse.quote(artist)), 'toptags')
-            album_tags_list = [
-                tag for tag in album_data["tag"] if normalize_tag(tag["name"]) in TAGS]
-            if len(album_tags_list) > 0:
-                tags = {TAGS[normalize_tag(tag["name"])]: tag["count"]
-                        for tag in album_tags_list}
-
-    if tags is None or len(tags) == 0:
-        if artist in ARTISTS_TAGS:
-            tags = ARTISTS_TAGS[artist]
-    if tags is None:
-        artist_data = request_data(ARTIST_TOPTAGS.format(
-            api_key=API_KEY, artist=urllib.parse.quote(artist)), 'toptags')
-        artist_tags_list = [
-            tag for tag in artist_data["tag"] if normalize_tag(tag["name"]) in TAGS]
-        if len(artist_tags_list) > 0:
-            tags = {TAGS[normalize_tag(tag["name"])]: tag["count"]
-                    for tag in artist_tags_list}
-    tags_sum = sum(tags.values())
-    taste_portion = {
-        tag: tags[tag] / (tags_sum*(LAUNCH_TIME - track_uts)) for tag in tags}
-    record_tags_artist(artist, taste_portion)
+    taste_portion = {}
+    taste_portion[artist] = 1 / (LAUNCH_TIME - track_uts)
     return taste_portion
-
-
-def record_tags_artist(artist, taste_portion):
-    global tags_by_artists
-    for tag in taste_portion:
-        if tag not in tags_by_artists:
-            tags_by_artists[tag] = {}
-        if artist in tags_by_artists[tag]:
-            tags_by_artists[tag][artist] += taste_portion[tag]
-        else:
-            tags_by_artists[tag][artist] = taste_portion[tag]
-    # print('tag', tags_by_artists)
 
 
 def request_data(url, top_field, retries_num=0):
@@ -227,20 +135,6 @@ taste_pairs = sorted(
     reverse=True,
 )
 
-
-def get_top_by_tag(tag):
-    global tags_by_artists
-    return list(map(lambda item: item[0], sorted(tags_by_artists.get(tag, {}).items(),
-                                                 key=lambda taste_pair: taste_pair[1],
-                                                 reverse=True,)))[:10]
-top = taste_pairs[:10]
+top = taste_pairs[:200]
 for tag_pair in top:
     print(tag_pair)
-    pprint(get_top_by_tag(tag_pair[0]))
-
-
-def hashtagize(taste_pair):
-    return '#{phrase}'.format(phrase=taste_pair[0].lower().replace(' ', '_').replace('-', '_'))
-
-
-print(' '.join(map(hashtagize, taste_pairs[:20])))
